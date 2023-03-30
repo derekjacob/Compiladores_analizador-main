@@ -1,0 +1,1 @@
+if(cadena==676676){print("Hola mundo");}
