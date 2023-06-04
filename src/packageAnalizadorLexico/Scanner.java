@@ -5,9 +5,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.crypto.spec.ChaCha20ParameterSpec;
-import javax.lang.model.util.ElementScanner14;
-
 import java.lang.String;
 
 public class Scanner
@@ -70,8 +67,10 @@ public class Scanner
     }
 
     List<Token> scanTokens(){
-        int posicion = 0;
-        int estados = 0;
+        // Variables utilizadas para almacenar informacion
+        int posicionActual = 0, estados = 0;
+        String caracterLeido = "", cadenaLeida = "";
+        boolean reservadaEncontrada = false;
         // Lista para detectar los numeros
         List<String> numeros = new ArrayList<>();
         numeros.add("0");
@@ -84,131 +83,175 @@ public class Scanner
         numeros.add("7");
         numeros.add("8");
         numeros.add("9");
-        String aux = "", aux2 = "", aux3 = "";
         // La linea leida es separada en caracteres.
         String[] caracteres = source.split("|");
         // Analisis de la linea leida caracter por caracter.
-        while(posicion < caracteres.length) {
-            aux2 = aux + caracteres[posicion];
-            if(aux2 == " "){
-                posicion++;
-
-                aux2 = caracteres[posicion];
-            }
-            if (simbolos.containsKey(caracteres[posicion]) && (estados == 1 || estados == 3 || estados == 5)) {
-                estados = 2;
-            } else if (numeros.contains(caracteres[posicion]) && estados == 0) {
-                estados = 5;
-            } else if ((simbolos.containsKey(caracteres[posicion])) && estados == 0) {
-                estados = 6;
-            } else if (caracteres[posicion].equals(" ") && (estados == 1 || estados == 2)) {
-                estados = 4;
-            } else if (numeros.contains(caracteres[posicion]) && estados == 1) {
-                estados = 3;
-            } else if (caracteres[posicion].equals("\"") && estados == 0) {
-                posicion++;
-                while (caracteres[posicion].equals("\"") == false) {
-                    aux2 += caracteres[posicion];
-                    posicion++;
-                }
-                aux2 += caracteres[posicion];
-                tokens.add(new Token(TipoToken.CADENA, aux2, null, linea));
-                aux2 = "";
-                estados = 0;
-            } else if (estados == 0 && caracteres[posicion] !=" ") {
-                estados = 1;
-            } else if (estados == 0 && caracteres[posicion] ==" ") {
+        while(posicionActual < caracteres.length) {
+            reservadaEncontrada = false;
+            if(caracteres[posicionActual].equals(" ") && estados != 1){
+                posicionActual++;
+                cadenaLeida = "";
                 estados = 0;
             }
-
-            System.out.println("Cadracter leido: "+caracteres[posicion
-                    ]+" Posicion: "+posicion+" Estado: "+estados+" cadena leida: \""+aux2+"\" Aux: \""+aux+"\"");
-            if(caracteres[posicion].equals(" ") && estados == 4){
-                tokens.add(new Token(TipoToken.ID, aux2, null, linea));
-                aux2 = "";
-                estados = 0;
+            if(!caracteres[posicionActual].equals(" ")){
+                caracterLeido = caracteres[posicionActual];
+                cadenaLeida += caracterLeido; 
             }
-            // Comprobacion sobre el primer caracter leido despues de un token.
-            if(numeros.contains(caracteres[posicion]) && estados == 5){
-                aux2 = "";
-                while(isNumeric(caracteres[posicion])){
-                    aux2+= caracteres[posicion];
-                    posicion++;
-                }
-                tokens.add(new Token(TipoToken.NUMERO, aux2, aux2, linea));
-                posicion--;
-                aux2 = "";
-                estados = 0;
-            }
-            else if(aux2 != "" && numeros.contains(caracteres[posicion]) && estados == 3){
-                while(caracteres[posicion]!=" " && !(simbolos.containsKey(caracteres[posicion]))){
-                    posicion++;
-                }
-                tokens.add(new Token(TipoToken.ID,aux2,null,linea));
-                posicion--;
-                aux2 = "";
-                estados = 0;
-            }
-            // Comprobación si la cadena almacenada en el auxiliar es una palabra reservada.
-            else if(palabrasReservadas.containsKey(aux2) && estados == 1){
-                try{
-                    if(true){
-                        tokens.add(new Token(palabrasReservadas.get(aux2),aux2,null,linea));
-                        aux2 = "";
-                        estados = 0;
-                    }
-                }catch(Exception a){}
-            }
-            // Comprobacion si el caracter actual es un simbolo.
-            else if(simbolos.containsKey(caracteres[posicion]) && (estados == 6 || estados == 2)){
-                if(caracteres[posicion].equals("!") || caracteres[posicion].equals("=") || caracteres[posicion].equals("<") || caracteres[posicion].equals(">")){
-                    try{
-                        aux3 = caracteres[posicion] + caracteres [posicion + 1];
-                        if(simbolosDobles.containsKey(aux3)){
-                            tokens.add(new Token(simbolosDobles.get(aux3),aux3,null,linea));
-                            posicion++;
-                            aux2 = "";
-                            aux3 = "";
-                            estados = 0;
-                        }
-                    }catch(Exception ex){
-                        tokens.add(new Token(simbolos.get(caracteres[posicion]),caracteres[posicion],null,linea));
-                        aux2 = "";
-                        estados = 0;
-                    }
+            if(caracteres[posicionActual].equals(" ") && estados == 1){
+                if(reservadaEncontrada = verificarPalabraReservada(posicionActual, caracteres, cadenaLeida) == false){
+                    posicionActual = terminarIdentificador(posicionActual, caracteres, cadenaLeida);
                 }else{
-                    tokens.add(new Token(simbolos.get(caracteres[posicion]),caracteres[posicion],null,linea));
-                    aux2 = "";
+                    posicionActual++;
+                }
+                cadenaLeida = "";
+                estados = 0;
+            }
+            else if((estados == 0 || estados == 1) && !EsNumerico(caracterLeido) && !simbolos.containsKey(caracteres[posicionActual]) && !caracterLeido.equals("\"")){
+                estados = 1;
+                reservadaEncontrada = verificarPalabraReservada(posicionActual, caracteres, cadenaLeida);
+                if(reservadaEncontrada == true){
+                    cadenaLeida = "";
+                    estados = 0;
+                    posicionActual++;
+                }
+            }
+            else if(estados == 0 && cadenaLeida.equals("\"")){
+                cadenaLeida = "";
+                posicionActual = buscarFinalDeCadena(posicionActual, caracteres);
+            }
+            else if(simbolos.containsKey(caracteres[posicionActual])){
+                if(estados == 0){
+                    cadenaLeida = "";
+                    posicionActual = comprobarSimboloDoble(posicionActual, caracteres);
+                }else{
+                    interrupcionPorSimbolo(posicionActual, caracteres, cadenaLeida);
+                    posicionActual++;
+                    posicionActual = comprobarSimboloDoble(posicionActual-1, caracteres);
+                    cadenaLeida = "";
                     estados = 0;
                 }
             }
-            posicion++;
-            aux = aux2;
-            if(aux2 == " " || aux == " "){
-                aux2 = "";
-                aux = "";
+            else if(estados == 0 && numeros.contains(caracterLeido)){
+                cadenaLeida = "";
+                posicionActual = comprobarLongitudDeNumero(posicionActual, caracteres);
             }
+            else if(estados == 1 && EsNumerico(caracterLeido) && reservadaEncontrada == false){
+                estados = 0;
+                posicionActual = terminarIdentificador(posicionActual, caracteres, cadenaLeida);
+                cadenaLeida = "";
+            }
+            posicionActual++;
         }
-            // Auxiliar utilizado para almacenar lo analizado hasta el momento, se reiniciará cuando se detecte un token.
-            // Fin de la comprobación.
-            
+        if(estados == 1){
+            tokens.add(new Token(TipoToken.ID, cadenaLeida, null, linea));
+        }
             
         
         linea++;
         tokens.add(new Token(TipoToken.EOF, "", null, linea));
         return tokens;
     }
-    boolean isNumeric(String cadena) {
+    // Metodo para completar tokens cuando son interrumpidos por un simbolo
+    void interrupcionPorSimbolo(int posicionUltimoCaracter, String[] caracteres, String cadenaPrevia){
+        cadenaPrevia = cadenaPrevia.substring(0, cadenaPrevia.length()-1);
+        if(palabrasReservadas.containsKey(cadenaPrevia) && simbolos.containsKey(caracteres[posicionUltimoCaracter])){
+            tokens.add(new Token(palabrasReservadas.get(cadenaPrevia),cadenaPrevia,null,linea));
+        }else{
+            tokens.add(new Token(TipoToken.ID, cadenaPrevia, null, linea));
+        }
+    }
 
+    // Metodo que añade un token de identificador
+    int terminarIdentificador(int posicionInterna, String[] caracteres, String cadenaPrevia){
+        try{
+            while(!caracteres[posicionInterna].equals(" ") && !simbolos.containsKey(caracteres[posicionInterna])){
+                posicionInterna++;
+                cadenaPrevia += caracteres[posicionInterna];
+            }
+            tokens.add(new Token(TipoToken.ID, cadenaPrevia, null, linea));
+            return posicionInterna;
+        }catch(Exception EsElUltimoCaracter){
+            tokens.add(new Token(TipoToken.ID, cadenaPrevia, null, linea));
+        }
+        return posicionInterna;
+    }
+
+    // Metodo que verifica si los caracteres leidos son una palabra reservada
+    boolean verificarPalabraReservada(int posicionInterna, String[] caracteres, String palabraReservada){
+        try{
+            if(palabrasReservadas.containsKey(palabraReservada) && caracteres[posicionInterna + 1].equals(" ")){
+                tokens.add(new Token(palabrasReservadas.get(palabraReservada),palabraReservada,null,linea));
+                return true;
+            }
+        }catch(Exception EsElUltimoCaracter){
+            tokens.add(new Token(palabrasReservadas.get(palabraReservada),palabraReservada,null,linea));
+            return true;
+        }
+        return false;
+    }
+    // Metodo que añade un token de cadena
+    int buscarFinalDeCadena(int posicionInterna, String[] caracteres){
+        String valorDeCadena = caracteres[posicionInterna];
+        posicionInterna++;
+        try{
+            while(!caracteres[posicionInterna].equals("\"")){
+                valorDeCadena += caracteres[posicionInterna];
+                posicionInterna++;
+            }
+            valorDeCadena += caracteres[posicionInterna];
+            tokens.add(new Token(TipoToken.CADENA, valorDeCadena, null, linea));
+        }catch(Exception ultimoCaracter){
+            Interprete.error(linea, "No se cierra la cadena");
+        }
+        return posicionInterna;
+    }
+    // Metodo que añade un token de numero
+    int comprobarLongitudDeNumero(int posicionInterna, String[] caracteres){
+        String numero = "";
+        while(EsNumerico(caracteres[posicionInterna]) || caracteres[posicionInterna].equals(".")){
+            numero  += caracteres[posicionInterna];
+            posicionInterna++;
+            if(posicionInterna == caracteres.length) break;
+        }
+        posicionInterna--;
+        tokens.add(new Token(TipoToken.NUMERO,numero,null,linea));
+        return posicionInterna;
+    }
+    // Metodo que añade un token de simbolo
+    int comprobarSimboloDoble(int posicionInterna, String[] caracteres){
+        String caracterActual = caracteres[posicionInterna];
+        if(caracterActual.equals("!") || caracterActual.equals("<") || caracterActual.equals(">") || caracterActual.equals("=") || caracterActual.equals("/")){
+            try{
+                String caracterDoble = caracteres[posicionInterna] + caracteres[posicionInterna + 1];
+                if(simbolosDobles.containsKey(caracterDoble)){
+                    tokens.add(new Token(simbolosDobles.get(caracterDoble),caracterDoble,null,linea));
+                    posicionInterna++;
+                }
+                //Comentario para una linea
+                else if(caracterDoble.equals("//")){
+                    posicionInterna = caracteres.length;
+                    tokens.add(new Token(TipoToken.COMENTARIO,null,null,linea));
+                }
+                else{
+                    tokens.add(new Token(simbolos.get(caracteres[posicionInterna]),caracteres[posicionInterna],null,linea));
+                }
+            }catch(Exception ultimoCaracter){
+                tokens.add(new Token(simbolos.get(caracteres[posicionInterna]),caracteres[posicionInterna],null,linea));
+            }
+        }else{
+            tokens.add(new Token(simbolos.get(caracteres[posicionInterna]),caracteres[posicionInterna],null,linea));
+        }
+        return posicionInterna;
+    }
+    // Comprobador de numeros
+    boolean EsNumerico(String cadena) {
         boolean resultado;
-
         try {
             Integer.parseInt(cadena);
             resultado = true;
-        } catch (NumberFormatException excepcion) {
+        } catch (NumberFormatException NoEsNumero) {
             resultado = false;
         }
         return resultado;
     }
-      
 }
