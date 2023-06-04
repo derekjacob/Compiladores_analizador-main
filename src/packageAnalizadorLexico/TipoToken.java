@@ -25,6 +25,8 @@ public enum TipoToken
     CADENA,
     // Numero:
     NUMERO,
+    // Comentario
+    COMENTARIO, 
     // Signo del lenguaje:
     PARENTESIS_ABRE,
     PARENTESIS_CIERRA,
