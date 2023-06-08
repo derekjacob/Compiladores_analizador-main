@@ -7,70 +7,70 @@ import java.util.Map;
 
 import java.lang.String;
 
-public class Scanner
-{
+public class Scanner {
     private final String source;
 
     private final List<Token> tokens = new ArrayList<>();
 
-    private int linea = 1;
+    private int linea = 0;
 
     private static final Map<String, TipoToken> palabrasReservadas;
     private static final Map<String, TipoToken> simbolos;
     private static final Map<String, TipoToken> simbolosDobles;
+    private static boolean reservadaEncontrada = false, comentarioLinea = false, comentarioComplejo = false;
+
     static {
         // HashMap para palabras reservadas
         palabrasReservadas = new HashMap<>();
         palabrasReservadas.put("and", TipoToken.AND);
         palabrasReservadas.put("class", TipoToken.CLASS);
-        palabrasReservadas.put("else", TipoToken.ELSE );
-        palabrasReservadas.put("false", TipoToken.FALSE );
-        palabrasReservadas.put("for", TipoToken.FOR );
-        palabrasReservadas.put("function", TipoToken.FUNCTION );
-        palabrasReservadas.put("if", TipoToken.IF );
-        palabrasReservadas.put("nulL", TipoToken.NULL );
-        palabrasReservadas.put("or", TipoToken.OR );
+        palabrasReservadas.put("else", TipoToken.ELSE);
+        palabrasReservadas.put("false", TipoToken.FALSE);
+        palabrasReservadas.put("for", TipoToken.FOR);
+        palabrasReservadas.put("fun", TipoToken.FUNCTION);
+        palabrasReservadas.put("if", TipoToken.IF);
+        palabrasReservadas.put("nulL", TipoToken.NULL);
+        palabrasReservadas.put("or", TipoToken.OR);
         palabrasReservadas.put("print", TipoToken.PRINT);
-        palabrasReservadas.put("return", TipoToken.RETURN );
-        palabrasReservadas.put("super", TipoToken.SUPER );
-        palabrasReservadas.put("this", TipoToken.THIS );
-        palabrasReservadas.put("true", TipoToken.TRUE );
-        palabrasReservadas.put("var", TipoToken.VAR );
-        palabrasReservadas.put("while", TipoToken.WHILE );
+        palabrasReservadas.put("return", TipoToken.RETURN);
+        palabrasReservadas.put("super", TipoToken.SUPER);
+        palabrasReservadas.put("this", TipoToken.THIS);
+        palabrasReservadas.put("true", TipoToken.TRUE);
+        palabrasReservadas.put("var", TipoToken.VAR);
+        palabrasReservadas.put("while", TipoToken.WHILE);
         // HashMap para simbolos
         simbolos = new HashMap<>();
-        simbolos.put("(", TipoToken.PARENTESIS_ABRE );
-        simbolos.put(")", TipoToken.PARENTESIS_CIERRA );
-        simbolos.put("{", TipoToken.LLAVE_ABRE );
-        simbolos.put("}", TipoToken.LLAVE_CIERRA );
-        simbolos.put(",", TipoToken.COMA );
-        simbolos.put(".", TipoToken.PUNTO );
-        simbolos.put(";", TipoToken.PUNTOYCOMA );
-        simbolos.put("-", TipoToken.MENOS );
-        simbolos.put("+", TipoToken.MAS );
-        simbolos.put("*", TipoToken.ASTERISCO );
-        simbolos.put("/", TipoToken.DIAGONAL );
-        simbolos.put("!", TipoToken.ADMIRACION );
-        simbolos.put("=", TipoToken.ASIGNACION );
-        simbolos.put("<", TipoToken.MENOR );
-        simbolos.put(">", TipoToken.MAYOR );
+        simbolos.put("(", TipoToken.PARENTESIS_ABRE);
+        simbolos.put(")", TipoToken.PARENTESIS_CIERRA);
+        simbolos.put("{", TipoToken.LLAVE_ABRE);
+        simbolos.put("}", TipoToken.LLAVE_CIERRA);
+        simbolos.put(",", TipoToken.COMA);
+        simbolos.put(".", TipoToken.PUNTO);
+        simbolos.put(";", TipoToken.PUNTOYCOMA);
+        simbolos.put("-", TipoToken.MENOS);
+        simbolos.put("+", TipoToken.MAS);
+        simbolos.put("*", TipoToken.ASTERISCO);
+        simbolos.put("/", TipoToken.DIAGONAL);
+        simbolos.put("!", TipoToken.ADMIRACION);
+        simbolos.put("=", TipoToken.ASIGNACION);
+        simbolos.put("<", TipoToken.MENOR);
+        simbolos.put(">", TipoToken.MAYOR);
         // HashMap para simbolos de dos digitos.
         simbolosDobles = new HashMap<>();
-        simbolosDobles.put("!=", TipoToken.DIFERENTE );
-        simbolosDobles.put("==", TipoToken.IGUAL );
-        simbolosDobles.put("<=", TipoToken.MENORIGUAL );
-        simbolosDobles.put(">=", TipoToken.MAYORIGUAL );
+        simbolosDobles.put("!=", TipoToken.DIFERENTE);
+        simbolosDobles.put("==", TipoToken.IGUAL);
+        simbolosDobles.put("<=", TipoToken.MENORIGUAL);
+        simbolosDobles.put(">=", TipoToken.MAYORIGUAL);
     }
 
-    Scanner(String source){
+    Scanner(String source) {
         this.source = source;
     }
 
-    List<Token> scanTokens(){
+    List<Token> scanTokens() {
         // Variables utilizadas para almacenar informacion
         int posicionActual = 0, estados = 0;
         String caracterLeido = "", cadenaLeida = "";
-        boolean reservadaEncontrada = false;
         // Lista para detectar los numeros
         List<String> numeros = new ArrayList<>();
         numeros.add("0");
@@ -86,92 +86,113 @@ public class Scanner
         // La linea leida es separada en caracteres.
         String[] caracteres = source.split("|");
         // Analisis de la linea leida caracter por caracter.
-        while(posicionActual < caracteres.length) {
-            reservadaEncontrada = false;
-            if(caracteres[posicionActual].equals(" ") && estados != 1){
+        while (posicionActual < caracteres.length) {
+            if (!(caracteres[posicionActual].equals("\n") || caracteres[posicionActual].equals("\r") || caracteres[posicionActual].equals(" "))) {
+                if(comentarioLinea == false && comentarioComplejo == false) {
+                    reservadaEncontrada = false;
+                    if (caracteres[posicionActual].equals(" ") && estados != 1) {
+                        posicionActual++;
+                        cadenaLeida = "";
+                        estados = 0;
+                    }
+                    if (!caracteres[posicionActual].equals(" ")) {
+                        caracterLeido = caracteres[posicionActual];
+                        cadenaLeida += caracterLeido;
+                    }
+                    if (simbolos.containsKey(caracteres[posicionActual])) {
+
+                        if (estados == 0) {
+                            cadenaLeida = "";
+                            posicionActual = comprobarSimboloDoble(posicionActual, caracteres);
+                        } else {
+                            interrupcionPorSimbolo(posicionActual, caracteres, cadenaLeida);
+                            posicionActual++;
+                            posicionActual = comprobarSimboloDoble(posicionActual - 1, caracteres);
+                            cadenaLeida = "";
+                            estados = 0;
+                        }
+                    }
+                    else if (caracteres[posicionActual].equals(" ") && estados == 1) {
+                        if (reservadaEncontrada = verificarPalabraReservada(posicionActual, caracteres, cadenaLeida) == false) {
+                            posicionActual = terminarIdentificador(posicionActual, caracteres, cadenaLeida);
+                        } else {
+                            posicionActual++;
+                        }
+                        cadenaLeida = "";
+                        estados = 0;
+                    } else if ((estados == 0 || estados == 1) && !EsNumerico(caracterLeido) && !simbolos.containsKey(caracteres[posicionActual]) && !caracterLeido.equals("\"")) {
+                        estados = 1;
+                        reservadaEncontrada = verificarPalabraReservada(posicionActual, caracteres, cadenaLeida);
+                        if (reservadaEncontrada == true) {
+                            cadenaLeida = "";
+                            estados = 0;
+                            posicionActual++;
+                        }
+                    } else if (estados == 0 && cadenaLeida.equals("\"")) {
+                        cadenaLeida = "";
+                        posicionActual = buscarFinalDeCadena(posicionActual, caracteres);
+                    } else if (estados == 0 && numeros.contains(caracterLeido)) {
+                        cadenaLeida = "";
+                        posicionActual = comprobarLongitudDeNumero(posicionActual, caracteres);
+                    } else if (estados == 1 && EsNumerico(caracterLeido) && reservadaEncontrada == false) {
+                        estados = 0;
+                        posicionActual = terminarIdentificador(posicionActual, caracteres, cadenaLeida);
+                        cadenaLeida = "";
+                    }
+                    posicionActual++;
+                }else{
+                    if((caracteres[posicionActual-1] + caracteres[posicionActual]).equals("*/")){
+                        comentarioComplejo = false;
+                    }
+                    try{
+                        if(caracteres[posicionActual].equals("\n")){
+                            comentarioLinea = false;
+                            linea++;
+                        }
+                    }catch(Exception UltimoCaracracter){
+
+                    }
+
+                }
+            } else {
                 posicionActual++;
-                cadenaLeida = "";
-                estados = 0;
             }
-            if(!caracteres[posicionActual].equals(" ")){
-                caracterLeido = caracteres[posicionActual];
-                cadenaLeida += caracterLeido; 
+            try{
+                if(caracteres[posicionActual].equals("\n"))linea++;
+            }catch(Exception UltimoCaracracter){
             }
-            if(caracteres[posicionActual].equals(" ") && estados == 1){
-                if(reservadaEncontrada = verificarPalabraReservada(posicionActual, caracteres, cadenaLeida) == false){
-                    posicionActual = terminarIdentificador(posicionActual, caracteres, cadenaLeida);
-                }else{
-                    posicionActual++;
-                }
-                cadenaLeida = "";
-                estados = 0;
-            }
-            else if((estados == 0 || estados == 1) && !EsNumerico(caracterLeido) && !simbolos.containsKey(caracteres[posicionActual]) && !caracterLeido.equals("\"")){
-                estados = 1;
-                reservadaEncontrada = verificarPalabraReservada(posicionActual, caracteres, cadenaLeida);
-                if(reservadaEncontrada == true){
-                    cadenaLeida = "";
-                    estados = 0;
-                    posicionActual++;
-                }
-            }
-            else if(estados == 0 && cadenaLeida.equals("\"")){
-                cadenaLeida = "";
-                posicionActual = buscarFinalDeCadena(posicionActual, caracteres);
-            }
-            else if(simbolos.containsKey(caracteres[posicionActual])){
-                if(estados == 0){
-                    cadenaLeida = "";
-                    posicionActual = comprobarSimboloDoble(posicionActual, caracteres);
-                }else{
-                    interrupcionPorSimbolo(posicionActual, caracteres, cadenaLeida);
-                    posicionActual++;
-                    posicionActual = comprobarSimboloDoble(posicionActual-1, caracteres);
-                    cadenaLeida = "";
-                    estados = 0;
-                }
-            }
-            else if(estados == 0 && numeros.contains(caracterLeido)){
-                cadenaLeida = "";
-                posicionActual = comprobarLongitudDeNumero(posicionActual, caracteres);
-            }
-            else if(estados == 1 && EsNumerico(caracterLeido) && reservadaEncontrada == false){
-                estados = 0;
-                posicionActual = terminarIdentificador(posicionActual, caracteres, cadenaLeida);
-                cadenaLeida = "";
-            }
-            posicionActual++;
         }
-        if(estados == 1){
+        if (estados == 1 && !(cadenaLeida.equals("\n") || cadenaLeida.equals("") || cadenaLeida.equals(" "))) {
             tokens.add(new Token(TipoToken.ID, cadenaLeida, null, linea));
         }
-            
-        
-        linea++;
         tokens.add(new Token(TipoToken.EOF, "", null, linea));
         return tokens;
+
     }
+
     // Metodo para completar tokens cuando son interrumpidos por un simbolo
     void interrupcionPorSimbolo(int posicionUltimoCaracter, String[] caracteres, String cadenaPrevia){
         cadenaPrevia = cadenaPrevia.substring(0, cadenaPrevia.length()-1);
         if(palabrasReservadas.containsKey(cadenaPrevia) && simbolos.containsKey(caracteres[posicionUltimoCaracter])){
             tokens.add(new Token(palabrasReservadas.get(cadenaPrevia),cadenaPrevia,null,linea));
-        }else{
+        }else if(simbolos.containsKey(caracteres[posicionUltimoCaracter])){
             tokens.add(new Token(TipoToken.ID, cadenaPrevia, null, linea));
         }
     }
 
     // Metodo que añade un token de identificador
     int terminarIdentificador(int posicionInterna, String[] caracteres, String cadenaPrevia){
+        comprobarSimboloDoble(posicionInterna,caracteres);
         try{
             while(!caracteres[posicionInterna].equals(" ") && !simbolos.containsKey(caracteres[posicionInterna])){
                 posicionInterna++;
                 cadenaPrevia += caracteres[posicionInterna];
             }
-            tokens.add(new Token(TipoToken.ID, cadenaPrevia, null, linea));
+            posicionInterna--;
+            if(!cadenaPrevia.equals(""))tokens.add(new Token(TipoToken.ID, cadenaPrevia, null, linea));
             return posicionInterna;
         }catch(Exception EsElUltimoCaracter){
-            tokens.add(new Token(TipoToken.ID, cadenaPrevia, null, linea));
+            if(!cadenaPrevia.equals(""))tokens.add(new Token(TipoToken.ID, cadenaPrevia, null, linea));
         }
         return posicionInterna;
     }
@@ -230,7 +251,11 @@ public class Scanner
                 //Comentario para una linea
                 else if(caracterDoble.equals("//")){
                     posicionInterna = caracteres.length;
-                    tokens.add(new Token(TipoToken.COMENTARIO,null,null,linea));
+                    comentarioLinea = true;
+                }
+                else if(caracterDoble.equals("/*")){
+                    posicionInterna = caracteres.length;
+                    comentarioComplejo = true;
                 }
                 else{
                     tokens.add(new Token(simbolos.get(caracteres[posicionInterna]),caracteres[posicionInterna],null,linea));
@@ -238,7 +263,7 @@ public class Scanner
             }catch(Exception ultimoCaracter){
                 tokens.add(new Token(simbolos.get(caracteres[posicionInterna]),caracteres[posicionInterna],null,linea));
             }
-        }else{
+        } else if(simbolos.containsKey(caracteres[posicionInterna])){
             tokens.add(new Token(simbolos.get(caracteres[posicionInterna]),caracteres[posicionInterna],null,linea));
         }
         return posicionInterna;
