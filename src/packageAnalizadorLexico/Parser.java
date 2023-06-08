@@ -251,7 +251,7 @@ public class Parser{
         if(hayErrores) return;
         if(preanalisis.equals(printToken)){
             conincidir(printToken);
-            STATMENT();
+            EXPRESSION();
             conincidir(puntoYComaToken);
         }
         else{
