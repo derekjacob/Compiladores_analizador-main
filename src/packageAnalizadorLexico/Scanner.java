@@ -12,7 +12,7 @@ public class Scanner {
 
     private final List<Token> tokens = new ArrayList<>();
 
-    private int linea = 0;
+    private int linea = 1;
 
     private static final Map<String, TipoToken> palabrasReservadas;
     private static final Map<String, TipoToken> simbolos;
@@ -163,7 +163,7 @@ public class Scanner {
             }
         }
         if (estados == 1 && !(cadenaLeida.equals("\n") || cadenaLeida.equals("") || cadenaLeida.equals(" "))) {
-            tokens.add(new Token(TipoToken.ID, cadenaLeida, null, linea));
+            tokens.add(new Token(TipoToken.ID, cadenaLeida, (String) cadenaLeida, linea));
         }
         tokens.add(new Token(TipoToken.EOF, "", null, linea));
         return tokens;
@@ -174,9 +174,9 @@ public class Scanner {
     void interrupcionPorSimbolo(int posicionUltimoCaracter, String[] caracteres, String cadenaPrevia){
         cadenaPrevia = cadenaPrevia.substring(0, cadenaPrevia.length()-1);
         if(palabrasReservadas.containsKey(cadenaPrevia) && simbolos.containsKey(caracteres[posicionUltimoCaracter])){
-            tokens.add(new Token(palabrasReservadas.get(cadenaPrevia),cadenaPrevia,null,linea));
+            tokens.add(new Token(palabrasReservadas.get(cadenaPrevia),cadenaPrevia,(String) cadenaPrevia,linea));
         }else if(simbolos.containsKey(caracteres[posicionUltimoCaracter])){
-            tokens.add(new Token(TipoToken.ID, cadenaPrevia, null, linea));
+            tokens.add(new Token(TipoToken.ID, cadenaPrevia,(String) cadenaPrevia, linea));
         }
     }
 
@@ -189,10 +189,10 @@ public class Scanner {
                 cadenaPrevia += caracteres[posicionInterna];
             }
             posicionInterna--;
-            if(!cadenaPrevia.equals(""))tokens.add(new Token(TipoToken.ID, cadenaPrevia, null, linea));
+            if(!cadenaPrevia.equals(""))tokens.add(new Token(TipoToken.ID, cadenaPrevia,(String) cadenaPrevia, linea));
             return posicionInterna;
         }catch(Exception EsElUltimoCaracter){
-            if(!cadenaPrevia.equals(""))tokens.add(new Token(TipoToken.ID, cadenaPrevia, null, linea));
+            if(!cadenaPrevia.equals(""))tokens.add(new Token(TipoToken.ID, cadenaPrevia,(String) cadenaPrevia, linea));
         }
         return posicionInterna;
     }
@@ -201,26 +201,26 @@ public class Scanner {
     boolean verificarPalabraReservada(int posicionInterna, String[] caracteres, String palabraReservada){
         try{
             if(palabrasReservadas.containsKey(palabraReservada) && caracteres[posicionInterna + 1].equals(" ")){
-                tokens.add(new Token(palabrasReservadas.get(palabraReservada),palabraReservada,null,linea));
+                tokens.add(new Token(palabrasReservadas.get(palabraReservada),palabraReservada, palabraReservada,linea));
                 return true;
             }
         }catch(Exception EsElUltimoCaracter){
-            tokens.add(new Token(palabrasReservadas.get(palabraReservada),palabraReservada,null,linea));
+            tokens.add(new Token(palabrasReservadas.get(palabraReservada),palabraReservada, palabraReservada,linea));
             return true;
         }
         return false;
     }
     // Metodo que añade un token de cadena
     int buscarFinalDeCadena(int posicionInterna, String[] caracteres){
-        String valorDeCadena = caracteres[posicionInterna];
+        String valorDeCadena = "";
         posicionInterna++;
         try{
             while(!caracteres[posicionInterna].equals("\"")){
                 valorDeCadena += caracteres[posicionInterna];
                 posicionInterna++;
             }
-            valorDeCadena += caracteres[posicionInterna];
-            tokens.add(new Token(TipoToken.CADENA, valorDeCadena, null, linea));
+            //valorDeCadena += caracteres[posicionInterna];
+            tokens.add(new Token(TipoToken.CADENA, valorDeCadena, valorDeCadena, linea));
         }catch(Exception ultimoCaracter){
             Interprete.error(linea, "No se cierra la cadena");
         }
@@ -235,7 +235,7 @@ public class Scanner {
             if(posicionInterna == caracteres.length) break;
         }
         posicionInterna--;
-        tokens.add(new Token(TipoToken.NUMERO,numero,null,linea));
+        tokens.add(new Token(TipoToken.NUMERO,numero,Double.valueOf(numero),linea));
         return posicionInterna;
     }
     // Metodo que añade un token de simbolo
@@ -245,7 +245,7 @@ public class Scanner {
             try{
                 String caracterDoble = caracteres[posicionInterna] + caracteres[posicionInterna + 1];
                 if(simbolosDobles.containsKey(caracterDoble)){
-                    tokens.add(new Token(simbolosDobles.get(caracterDoble),caracterDoble,null,linea));
+                    tokens.add(new Token(simbolosDobles.get(caracterDoble),caracterDoble,(String) caracterDoble,linea));
                     posicionInterna++;
                 }
                 //Comentario para una linea
@@ -258,13 +258,13 @@ public class Scanner {
                     comentarioComplejo = true;
                 }
                 else{
-                    tokens.add(new Token(simbolos.get(caracteres[posicionInterna]),caracteres[posicionInterna],null,linea));
+                    tokens.add(new Token(simbolos.get(caracteres[posicionInterna]),caracteres[posicionInterna],(String) caracteres[posicionInterna],linea));
                 }
             }catch(Exception ultimoCaracter){
-                tokens.add(new Token(simbolos.get(caracteres[posicionInterna]),caracteres[posicionInterna],null,linea));
+                tokens.add(new Token(simbolos.get(caracteres[posicionInterna]),caracteres[posicionInterna],(String) caracteres[posicionInterna],linea));
             }
         } else if(simbolos.containsKey(caracteres[posicionInterna])){
-            tokens.add(new Token(simbolos.get(caracteres[posicionInterna]),caracteres[posicionInterna],null,linea));
+            tokens.add(new Token(simbolos.get(caracteres[posicionInterna]),caracteres[posicionInterna],(String) caracteres[posicionInterna],linea));
         }
         return posicionInterna;
     }

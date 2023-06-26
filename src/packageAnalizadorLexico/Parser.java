@@ -53,16 +53,19 @@ public class Parser{
     public Parser(List<Token> tokens){
         this.tokens = tokens;
     }
-    public void parse(){
+    public boolean parse(){
         i = 0;
         preanalisis = tokens.get(i);
         PROGRAM();
 
         if(hayErrores && !preanalisis.equals(finCadena)){
             System.out.println("Error en la linea " + preanalisis.linea + ". No se esperaba el token "+ preanalisis.tipo);
+            return false;
         }else if(!hayErrores && preanalisis.equals(finCadena)){
             System.out.println("Consulta valida");
+            return true;
         }
+        return false;
     }
 
     void PROGRAM(){
@@ -346,6 +349,7 @@ public class Parser{
     void LOGIC_OR_2(){
         if(hayErrores) return;
         if(preanalisis.equals(orToken)){
+            conincidir(orToken);
             LOGIC_AND();
             LOGIC_OR_2();
         }
@@ -363,6 +367,7 @@ public class Parser{
     void LOGIC_AND_2(){
         if(hayErrores) return;
         if(preanalisis.equals(andToken)){
+            conincidir(andToken);
             EQUALITY();
             LOGIC_AND_2();
         }
@@ -543,7 +548,7 @@ public class Parser{
         else if(preanalisis.equals(parentesisAbreToken)){
             conincidir(parentesisAbreToken);
             EXPRESSION();
-            conincidir(admiracionToken);
+            conincidir(parentesisCierraToken);
         }
         else if(preanalisis.equals(superToken)){
             conincidir(superToken);
