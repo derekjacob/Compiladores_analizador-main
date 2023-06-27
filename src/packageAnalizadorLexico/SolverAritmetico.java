@@ -43,11 +43,12 @@ public class SolverAritmetico {
                     return (String) ((String) resultadoIzquierdo).concat((String)resultadoDerecho);
                 }
             }else{
-                if(resultadoIzquierdo != null && resultadoDerecho != null){
-                    Interprete.error(n.getValue().linea,"Operacion de distintos tipos");
-                }else{
-                    Interprete.error(n.getValue().linea,"Operacion de distintos tipos");
+                if(resultadoIzquierdo!=null){
+                    if(resultadoDerecho!=null){
+                        Interprete.error(n.getValue().linea,"Operacion de distintos tipos");
+                    }
                 }
+
             }
         }
         return null;

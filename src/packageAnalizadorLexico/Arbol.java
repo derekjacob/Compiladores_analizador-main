@@ -11,11 +11,37 @@ public class Arbol {
         this.raiz = raiz;
     }
     public Object res = null;
+    public boolean varParaId = false;
+    public boolean asignacionEnVar = false;
 
     public void recorrer(){
-        TablaSimbolos tabla = new TablaSimbolos();
         for(Nodo n: raiz.getHijos()){
+            /*System.out.println("FOR---------------------------");
+            System.out.println(raiz.getHijos());
+*/
             recorridoPostOrden(n);
+
+            if((asignacionEnVar && varParaId)){
+                //System.out.println("No hace nada");
+                asignacionEnVar = false;
+                varParaId = false;
+            }else{
+                if(tabla.existeIdentificador((String) raiz.getHijos().get(0).getHijos().get(0).getValue().literal)){
+                    if(res == null){
+                        int a = raiz.getHijos().indexOf(n);
+                        if(raiz.getHijos().get(a).getHijos().get(1).getValue().tipo == TipoToken.ID){
+                            tabla.actualizar((String) raiz.getHijos().get(a).getHijos().get(0).getValue().literal,tabla.obtener((String) raiz.getHijos().get(a).getHijos().get(1).getValue().literal));
+                        }else{
+                            tabla.actualizar((String) raiz.getHijos().get(a).getHijos().get(0).getValue().literal,raiz.getHijos().get(a).getHijos().get(1).getValue().literal);
+                        }
+                    }else {
+                        int a = raiz.getHijos().indexOf(n);
+                        tabla.actualizar((String) raiz.getHijos().get(a).getHijos().get(0).getValue().literal, res);
+                        res = null;
+                    }
+                }
+            }
+
         }
     }
     public void recorridoPostOrden(Nodo n){
@@ -46,13 +72,15 @@ public class Arbol {
             }
         }
         switchRecorrido(n);
-
     }
     private void switchRecorrido(Nodo n){
         Token t = n.getValue();
         //System.out.println(t.tipo);
         switch (t.tipo){
-
+            // Cambio de valor
+            case ID:
+                asignacionEnVar = true;
+                break;
             // Operadores aritméticos
             case MAS:
             case MENOS:
@@ -75,6 +103,7 @@ public class Arbol {
                 break;
             // Print
             case PRINT:
+                varParaId = true;
                 Object auxP = null;
                 if(n.getHijos().get(0).getValue().esOperando()){
                     if(n.getHijos().get(0).getValue().tipo == TipoToken.ID){
@@ -90,6 +119,7 @@ public class Arbol {
                 break;
             // Variable
             case VAR:
+                varParaId = true;
                 if(n.getHijos()!=null) {
                     if (n.getHijos().size() == 1) {
                         n = n.getHijos().get(0);
@@ -98,8 +128,9 @@ public class Arbol {
                                 Interprete.error(n.getValue().linea, "La variable \"" + n.getHijos().get(0).getValue().literal + "\" ya existe.");
                             } else {
                                 tabla.asignar((String) n.getHijos().get(0).getValue().literal, n.getHijos().get(1).getValue().literal);
-                                System.out.println("VARIABLE GUARDADA");
+                                /*System.out.println("VARIABLE GUARDADA");
                                 System.out.println("ID: " + (String) n.getHijos().get(0).getValue().literal + " Valor: " + n.getHijos().get(1).getValue().literal);
+                                tabla.imprimir();*/
                             }
 
                         } else {
@@ -110,15 +141,13 @@ public class Arbol {
                                     Interprete.error(n.getValue().linea, "La variable \"" + n.getHijos().get(0).getValue().literal + "\" ya existe.");
                                 } else {
                                     tabla.asignar((String) n.getHijos().get(0).getValue().literal, res);
-                                    System.out.println("VARIABLE GUARDADA");
+                                    /*System.out.println("VARIABLE GUARDADA");
                                     System.out.println("ID: " + (String) n.getHijos().get(0).getValue().literal + " Valor: " + res);
-                                    res = null;
+                                    res = null;*/
                                 }
                             }
                         }
                     }
-                }else{
-                    tabla.asignar((String) n.getValue().literal,null);
                 }
                 break;
             case IF:
@@ -159,8 +188,8 @@ public class Arbol {
                 res = null;
                 int hijoSigW = 1;
                 if(seCumpleW == true){
-                    while(true){
-                        while(n.getHijos().size() > hijoSigW){
+                    while(seCumpleW){
+                        while(auxW.getHijos().size() > hijoSigW){
                             auxW = auxW.getHijos().get(hijoSigW);
                             recorridoPostOrden(auxW);
                             hijoSigW++;

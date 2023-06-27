@@ -43,10 +43,13 @@ public class SolverLogico {
                 }
             }
             if (!hayErrores) {
-                //System.out.println(resultadoDerecho);
-                //System.out.println(resultadoIzquierdo);
+
+                /*System.out.println(resultadoIzquierdo);
+                System.out.println(resultadoDerecho);
+                System.out.println();*/
                 if (resultadoIzquierdo.getClass() == resultadoDerecho.getClass()) {
-                    if((n.getValue().tipo!=TipoToken.AND || n.getValue().tipo!=TipoToken.OR)){
+                    if((n.getValue().tipo!=TipoToken.AND && n.getValue().tipo!=TipoToken.OR && n.getValue().tipo!=TipoToken.MAYOR && n.getValue().tipo!=TipoToken.MENOR && n.getValue().tipo!=TipoToken.MAYORIGUAL && n.getValue().tipo!=TipoToken.MENORIGUAL)){
+                        //System.out.println("TEST 1");
                         switch (n.getValue().tipo) {
                             case IGUAL:
                                 return (resultadoIzquierdo.equals(resultadoDerecho));
@@ -61,7 +64,7 @@ public class SolverLogico {
                         }
                     }
                     else if(resultadoIzquierdo instanceof Double && resultadoDerecho instanceof Double && (n.getValue().tipo!=TipoToken.AND && n.getValue().tipo!=TipoToken.OR)){
-
+                        //System.out.println("TEST 2");
                         switch (n.getValue().tipo){
                             case MAYOR:
                                 return ((double) resultadoIzquierdo > (double) resultadoDerecho);
@@ -79,12 +82,13 @@ public class SolverLogico {
                                 return solverA.resolver(tabla);
                         }
                     }
-                    else if(((boolean) resultadoIzquierdo.equals(true)||(boolean) resultadoIzquierdo.equals(false))&& ((boolean) resultadoDerecho.equals(true) && (boolean) resultadoDerecho.equals(false))){
+                    else if((resultadoIzquierdo.toString().equals("true")|| resultadoIzquierdo.toString().equals("false"))&& (resultadoDerecho.toString().equals("true") || resultadoDerecho.toString().equals("false"))){
+                        //System.out.println("TEST 3");
                         switch (n.getValue().tipo) {
                             case AND:
-                                return (Boolean.parseBoolean((String)resultadoIzquierdo) && (Boolean.parseBoolean((String)resultadoDerecho)));
+                                return (Boolean)resultadoIzquierdo && (Boolean) resultadoDerecho;
                             case OR:
-                                return (Boolean.parseBoolean((String)resultadoIzquierdo) || (Boolean.parseBoolean((String)resultadoDerecho)));
+                                return (Boolean)resultadoIzquierdo || (Boolean) resultadoDerecho;
                             case MAS:
                             case MENOS:
                             case ASTERISCO:

@@ -94,7 +94,11 @@ public class GeneradorPostfija {
                     // de control.
                     pila.pop();
                     postfija.add(new Token(TipoToken.PUNTOYCOMA, ";", null));
-
+                    Token aux = pilaEstructurasDeControl.peek();
+                    if(aux.tipo == TipoToken.ELSE){
+                        pilaEstructurasDeControl.pop();
+                        postfija.add(new Token(TipoToken.PUNTOYCOMA, ";", null));
+                    }
                     // Se extrae de la pila de estrucuras de control, el elemento en el tope
                     pilaEstructurasDeControl.pop();
                     if(pilaEstructurasDeControl.isEmpty()){

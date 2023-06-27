@@ -87,6 +87,7 @@ public class Scanner {
         String[] caracteres = source.split("|");
         // Analisis de la linea leida caracter por caracter.
         while (posicionActual < caracteres.length) {
+            //System.out.println(posicionActual);
             if (!(caracteres[posicionActual].equals("\n") || caracteres[posicionActual].equals("\r") || caracteres[posicionActual].equals(" "))) {
                 if(comentarioLinea == false && comentarioComplejo == false) {
                     reservadaEncontrada = false;
@@ -141,13 +142,17 @@ public class Scanner {
                     }
                     posicionActual++;
                 }else{
+                    //System.out.println("test");
                     if((caracteres[posicionActual-1] + caracteres[posicionActual]).equals("*/")){
                         comentarioComplejo = false;
                     }
                     try{
                         if(caracteres[posicionActual].equals("\n")){
+                            //System.out.println("pq");
                             comentarioLinea = false;
                             linea++;
+                        }else{
+                            posicionActual++;
                         }
                     }catch(Exception UltimoCaracracter){
 
@@ -155,11 +160,22 @@ public class Scanner {
 
                 }
             } else {
+                if(posicionActual!= 0){
+                    if((caracteres[posicionActual-1] + caracteres[posicionActual]).equals("*/")){
+                        comentarioComplejo = false;
+                    }
+                }
+                try{
+                    if(caracteres[posicionActual].equals("\n")){
+                        //System.out.println("pq");
+                        comentarioLinea = false;
+                        linea++;
+                    }
+                }catch(Exception UltimoCaracracter){
+
+                }
                 posicionActual++;
-            }
-            try{
-                if(caracteres[posicionActual].equals("\n"))linea++;
-            }catch(Exception UltimoCaracracter){
+
             }
         }
         if (estados == 1 && !(cadenaLeida.equals("\n") || cadenaLeida.equals("") || cadenaLeida.equals(" "))) {
@@ -250,11 +266,11 @@ public class Scanner {
                 }
                 //Comentario para una linea
                 else if(caracterDoble.equals("//")){
-                    posicionInterna = caracteres.length;
+                    //posicionInterna = caracteres.length;
                     comentarioLinea = true;
                 }
                 else if(caracterDoble.equals("/*")){
-                    posicionInterna = caracteres.length;
+                    //posicionInterna = caracteres.length;
                     comentarioComplejo = true;
                 }
                 else{

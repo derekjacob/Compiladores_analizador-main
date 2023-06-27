@@ -24,7 +24,6 @@ public class GeneradorAST {
             /*System.out.println("TOKEN: "+t.tipo);
             System.out.println("PILA: "+pila);
             System.out.println("PILA PADRES: "+pilaPadres.peek().getValue());
-
             System.out.println("PADRE: "+padre.getValue());
             System.out.println();*/
             if(t.tipo == TipoToken.EOF){
@@ -44,23 +43,19 @@ public class GeneradorAST {
             else if(t.esOperando()){
                 Nodo n = new Nodo(t);
                 pila.push(n);
+                /*if(padre.getValue()==null){
+                    padre = new Nodo(new Token(TipoToken.ASIGNACION,"=","=", t.linea));
+                    pilaPadres.push(padre);
+                }*/
             }
             else if(t.esOperador()){
-                Nodo n;
-                if(t.esOperador() && pilaPadres.peek().getValue() == null){
-                    n = new Nodo(t);
-                    padre.insertarSiguienteHijo(n);
-
-                    padre = n;
-                }else{
-                    n = new Nodo(t);
-                    int aridad = t.aridad();
-                    for(int i=1; i<=aridad; i++){
-                        Nodo nodoAux = pila.pop();
-                        n.insertarHijo(nodoAux);
-                    }
-                    pila.push(n);
+                Nodo n = new Nodo(t);
+                int aridad = t.aridad();
+                for(int i=1; i<=aridad; i++){
+                    Nodo nodoAux = pila.pop();
+                    n.insertarHijo(nodoAux);
                 }
+                pila.push(n);
 
             }
             else if(t.tipo == TipoToken.PUNTOYCOMA){
@@ -77,9 +72,9 @@ public class GeneradorAST {
 
                     Nodo n = pila.pop();
                     if(padre.getValue() == null){
-
+                        padre.insertarSiguienteHijo(n);
                     }
-                    else if(padre.getValue().tipo == TipoToken.VAR){
+                    else if(padre.getValue().tipo == TipoToken.VAR ||padre.getValue().tipo == TipoToken.ASIGNACION){
 
                         /*
                         En el caso del VAR, es necesario eliminar el igual que
@@ -102,13 +97,14 @@ public class GeneradorAST {
                         pilaPadres.pop();
                         padre = pilaPadres.peek();
                     }
-                    else if(padre.getValue().tipo == TipoToken.ASIGNACION){
+                    /*else if(padre.getValue().tipo == TipoToken.ASIGNACION){
                         Nodo n1 = pila.pop();
                         padre.insertarSiguienteHijo(n1);
                         padre.insertarSiguienteHijo(n);
-                    }
+                    }*/
                     else {
                         padre.insertarSiguienteHijo(n);
+                        //System.out.println(n.getValue());
                     }
 
                 }
